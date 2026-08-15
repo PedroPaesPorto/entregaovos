@@ -22,11 +22,13 @@ export function renderizarPainelEntregador(conteudoDiv, emailUsuario, nomeEntreg
                     <input type="number" id="m-avaria-v" placeholder="Avarias Vermelhas" class="w-full px-3 py-2 border rounded-lg text-sm">
                 </div>
                 <select id="m-pagamento" class="w-full px-3 py-2 border rounded-lg text-sm">
-                    <option value="Pix">Pix</option><option value="Dinheiro">Dinheiro</option>
-                    <option value="Cartão">Cartão</option><option value="Fiado / A Receber">Fiado / A Receber</option>
+                    <option value="Pix">Pix</option>
+                    <option value="Dinheiro">Dinheiro</option>
+                    <option value="Cartão">Cartão</option>
+                    <option value="Fiado / A Receber">Fiado / A Receber</option>
                 </select>
                 <div class="border rounded-lg p-2 relative">
-                    <canvas id="canvas-assinatura" class="w-full h-32 bg-slate-50 cursor-crosshair"></canvas>
+                    <canvas id="canvas-assinatura" class="w-full h-32 bg-slate-50 cursor-crosshair touch-none"></canvas>
                     <button type="button" id="btn-limpar-assinatura" class="absolute top-2 right-2 text-xs bg-slate-200 px-2 py-1 rounded">Limpar</button>
                 </div>
                 <div class="flex gap-2">
@@ -40,10 +42,16 @@ export function renderizarPainelEntregador(conteudoDiv, emailUsuario, nomeEntreg
     // --- Rastreamento ---
     if ("geolocation" in navigator) {
         navigator.geolocation.watchPosition(async (pos) => {
-            await setDoc(doc(db, 'entregadores_posicao', emailUsuario), {
-                lat: pos.coords.latitude, lng: pos.coords.longitude,
-                nome: nomeEntregador, ultimaAtualizacao: new Date()
-            }, { merge: true });
+            try {
+                await setDoc(doc(db, 'entregadores_posicao', emailUsuario), {
+                    lat: pos.coords.latitude, 
+                    lng: pos.coords.longitude,
+                    nome: nomeEntregador, 
+                    ultimaAtualizacao: new Date()
+                }, { merge: true });
+            } catch (error) {
+                console.error("Erro ao atualizar localização:", error);
+            }
         }, null, { enableHighAccuracy: true });
     }
 
@@ -52,10 +60,15 @@ export function renderizarPainelEntregador(conteudoDiv, emailUsuario, nomeEntreg
     const ctx = canvas.getContext('2d');
     let desenhando = false;
     
-    // Ajuste responsivo do canvas
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-    ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+    // Configuração correta de resolução do canvas para evitar distorção
+    setTimeout(() => {
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        ctx.strokeStyle = '#000'; 
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+    }, 50);
 
     const getPos = (e) => {
         const r = canvas.getBoundingClientRect();
@@ -64,10 +77,38 @@ export function renderizarPainelEntregador(conteudoDiv, emailUsuario, nomeEntreg
         return { x: clientX - r.left, y: clientY - r.top };
     };
 
-    canvas.onmousedown = (e) => { desenhando = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); };
-    canvas.onmousemove = (e) => { if(desenhando) { const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); } };
-    window.onmouseup = () => desenhando = false;
-    document.getElementById('btn-limpar-assinatura').onclick = () => ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Eventos Mouse e Touch unificados
+    const iniciarDesenho = (e) => {
+        e.preventDefault();
+        desenhando = true;
+        ctx.beginPath();
+        const p = getPos(e);
+        ctx.moveTo(p.x, p.y);
+    };
+
+    const desenhar = (e) => {
+        if (!desenhando) return;
+        e.preventDefault();
+        const p = getPos(e);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+    };
+
+    const pararDesenho = () => {
+        desenhando = false;
+    };
+
+    canvas.addEventListener('mousedown', iniciarDesenho);
+    canvas.addEventListener('mousemove', desenhar);
+    window.addEventListener('mouseup', pararDesenho);
+
+    canvas.addEventListener('touchstart', iniciarDesenho, { passive: false });
+    canvas.addEventListener('touchmove', desenhar, { passive: false });
+    window.addEventListener('touchend', pararDesenho);
+
+    document.getElementById('btn-limpar-assinatura').onclick = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    };
 
     // --- Gerenciamento de Entregas ---
     let entregaAtiva = {};
@@ -75,29 +116,48 @@ export function renderizarPainelEntregador(conteudoDiv, emailUsuario, nomeEntreg
     onSnapshot(query(collection(db, 'entregas'), where('status', '==', 'Pendente')), (snap) => {
         const container = document.getElementById('lista-entregas-entregador');
         container.innerHTML = snap.empty ? `<p class="text-slate-500">Nenhuma entrega.</p>` : "";
+        
         snap.forEach(d => {
             const data = d.data();
             const div = document.createElement('div');
-            div.className = "bg-white p-4 rounded-xl border flex justify-between items-center";
-            div.innerHTML = `<div><h4 class="font-bold">${data.cliente}</h4><p class="text-xs">📦 ${data.branco}B | ${data.vermelho}V</p></div>`;
+            div.className = "bg-white p-4 rounded-xl border flex justify-between items-center shadow-sm";
+            div.innerHTML = `
+                <div>
+                    <h4 class="font-bold text-slate-800">${data.cliente}</h4>
+                    <p class="text-xs text-slate-500 mt-1">📦 ${data.branco || 0} Branco(s) | ${data.vermelho || 0} Vermelho(s)</p>
+                </div>
+            `;
+            
             const btn = document.createElement('button');
-            btn.className = "bg-green-600 text-white px-4 py-2 rounded-lg text-sm";
+            btn.className = "bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors";
             btn.textContent = "Concluir";
             btn.onclick = () => {
                 entregaAtiva = { id: d.id, ...data };
                 document.getElementById('modal-cliente-nome').textContent = `Cliente: ${data.cliente}`;
+                
+                // Limpa campos anteriores do modal
+                document.getElementById('m-avaria-b').value = '';
+                document.getElementById('m-avaria-v').value = '';
+                document.getElementById('m-pagamento').value = 'Pix';
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
                 document.getElementById('modal-entrega').classList.remove('hidden');
             };
+            
             div.appendChild(btn);
             container.appendChild(div);
         });
     });
 
-    document.getElementById('btn-fechar-modal').onclick = () => document.getElementById('modal-entrega').classList.add('hidden');
+    document.getElementById('btn-fechar-modal').onclick = () => {
+        document.getElementById('modal-entrega').classList.add('hidden');
+    };
 
     document.getElementById('btn-salvar-conclusao').onclick = async () => {
         const btn = document.getElementById('btn-salvar-conclusao');
-        btn.textContent = "Salvando..."; btn.disabled = true;
+        const originalText = btn.textContent;
+        btn.textContent = "Salvando..."; 
+        btn.disabled = true;
 
         try {
             await updateDoc(doc(db, 'entregas', entregaAtiva.id), {
@@ -109,13 +169,25 @@ export function renderizarPainelEntregador(conteudoDiv, emailUsuario, nomeEntreg
                 concluidoEm: new Date()
             });
 
-            // Dar baixa no estoque
-            await addDoc(collection(db, 'estoque_mov'), { tipo: 'branco', quantidade: entregaAtiva.branco, operacao: 'saida', criadoEm: new Date() });
-            await addDoc(collection(db, 'estoque_mov'), { tipo: 'vermelho', quantidade: entregaAtiva.vermelho, operacao: 'saida', criadoEm: new Date() });
+            // Dar baixa no estoque se houver quantidade
+            const qtdBranco = parseInt(entregaAtiva.branco) || 0;
+            if (qtdBranco > 0) {
+                await addDoc(collection(db, 'estoque_mov'), { tipo: 'branco', quantidade: qtdBranco, operacao: 'saida', criadoEm: new Date() });
+            }
+            
+            const qtdVermelho = parseInt(entregaAtive.vermelho) || 0; // Corrigido de entregaAtive para entregaAtiva abaixo
+            const qtdVermelhoReal = parseInt(entregaAtiva.vermelho) || 0;
+            if (qtdVermelhoReal > 0) {
+                await addDoc(collection(db, 'estoque_mov'), { tipo: 'vermelho', quantidade: qtdVermelhoReal, operacao: 'saida', criadoEm: new Date() });
+            }
 
             document.getElementById('modal-entrega').classList.add('hidden');
             alert("Entrega finalizada com sucesso!");
-        } catch (e) { alert("Erro ao salvar: " + e.message); }
-        btn.textContent = "Confirmar Entrega"; btn.disabled = false;
+        } catch (e) {
+            alert("Erro ao salvar: " + e.message);
+        } finally {
+            btn.textContent = originalText; 
+            btn.disabled = false;
+        }
     };
 }
