@@ -1,5 +1,5 @@
 import { db, auth } from './firebase-init.js';
-import { collection, addDoc, onSnapshot, query, orderBy, doc, setDoc, getDocs, updatedoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, addDoc, onSnapshot, query, orderBy, doc, setDoc, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 
 export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
