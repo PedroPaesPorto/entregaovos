@@ -125,6 +125,8 @@ export function exibirTelaLogin() {
     });
 }
 
+import { renderizarPainelEntregador } from './entregador.js';
+
 function carregarModuloPorPerfil(perfil, email) {
     const conteudo = document.getElementById('painel-conteudo');
     if (perfil === 'admin') {
@@ -132,6 +134,6 @@ function carregarModuloPorPerfil(perfil, email) {
     } else if (perfil === 'financeiro') {
         conteudo.innerHTML = `<h3 class="font-semibold text-lg text-emerald-600 mb-2">Painel Financeiro</h3><p>Módulo financeiro em desenvolvimento.</p>`;
     } else {
-        conteudo.innerHTML = `<h3 class="font-semibold text-lg text-blue-600 mb-2">Painel do Entregador</h3><p>Módulo de entregas em desenvolvimento.</p>`;
+        renderizarPainelEntregador(conteudo, email);
     }
 }
