@@ -397,7 +397,7 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
         document.getElementById('btn-salvar-edicao').onclick = async () => {
             const novoNome = document.getElementById('edit-c-nome').value;
             const novoTel = document.getElementById('edit-c-tel').value;
-            const novoEnd = document.getElementById('edit-c-end'].value;
+            const novoEnd = document.getElementById('edit-c-end').value;
             let lat = -8.7619, lng = -63.9039;
             try {
                 const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(novoEnd + ", Porto Velho, RO")}`);
