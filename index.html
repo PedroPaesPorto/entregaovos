@@ -129,18 +129,55 @@
     </main>
 
     <!-- Script básico para alternar abas -->
-    <script>
-        function mudarAba(abaDestino) {
-            // Esconde todas as seções
+   <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Sua configuração
+        const firebaseConfig = {
+            apiKey: "AIzaSyBrwxhCxatKrqyJxzRdhX2t54D7_-xQM18",
+            authDomain: "sistema-ovos-distribuicao.firebaseapp.com",
+            projectId: "sistema-ovos-distribuicao",
+            storageBucket: "sistema-ovos-distribuicao.firebasestorage.app",
+            messagingSenderId: "243415458017",
+            appId: "1:243415458017:web:da9429e769a317f92097a0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Função de alternar abas (mantida do código anterior)
+        window.mudarAba = function(abaDestino) {
             ['clientes', 'entregadores', 'veiculos', 'entregas'].forEach(aba => {
                 document.getElementById(`aba-${aba}`).classList.add('hidden');
                 document.getElementById(`btn-${aba}`).className = "py-3 font-medium text-slate-500 hover:text-amber-600 transition-all border-b-2 border-transparent";
             });
-
-            // Mostra a aba selecionada
             document.getElementById(`aba-${abaDestino}`).classList.remove('hidden');
             document.getElementById(`btn-${abaDestino}`).className = "py-3 font-medium text-amber-600 border-b-2 border-amber-600 transition-all";
-        }
+        };
+
+        // Salvar Cliente no Firestore
+        document.getElementById('form-cliente').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const nome = document.getElementById('cliente-nome').value;
+            const tel = document.getElementById('cliente-tel').value;
+            const end = document.getElementById('cliente-endereco').value;
+
+            try {
+                await addDoc(collection(db, "clientes"), {
+                    nome: nome,
+                    telefone: tel,
+                    endereco: end,
+                    dataCadastro: new Date()
+                });
+                alert("Cliente salvo com sucesso!");
+                document.getElementById('form-cliente').reset();
+            } catch (e) {
+                alert("Erro ao salvar: " + e.message);
+            }
+        });
     </script>
 </body>
 </html>
