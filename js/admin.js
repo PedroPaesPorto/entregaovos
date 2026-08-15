@@ -1,6 +1,7 @@
 import { db, auth } from './firebase-init.js';
 import { collection, addDoc, onSnapshot, query, orderBy, doc, setDoc, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
     conteudoDiv.innerHTML = `
@@ -318,15 +319,18 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
         alert("Cliente cadastrado!");
     };
 
-    // Cadastro de Entregadores (Gera Entregador + Usuário com o mesmo ID)
+    // Cadastro de Entregadores (Gera no Auth + Entregador + Usuário com o mesmo ID)
     document.getElementById('form-entregador').onsubmit = async (e) => { 
         e.preventDefault(); 
         const nome = document.getElementById('e-nome').value;
         const telefone = document.getElementById('e-tel').value;
         const email = document.getElementById('e-email').value;
+        const senhaTemporaria = "102030"; // Senha padrão solicitada
 
         try {
-            const novoId = doc(collection(db, 'entregadores')).id;
+            // 1. Cria o usuário real no Firebase Authentication
+            const userCredential = await createUserWithEmailAndPassword(auth, email, senhaTemporaria);
+            const uidReal = userCredential.user.uid; // ID real gerado pelo Auth
 
             const dadosEntregador = {
                 nome: nome,
@@ -338,20 +342,20 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
 
             const dadosUsuario = {
                 email: email,
-                senha: "102030",
                 perfil: "entregador",
                 ativo: true,
                 criadoEm: new Date()
             };
 
+            // 2. Salva nas duas coleções usando o mesmo UID do Authentication
             await Promise.all([
-                setDoc(doc(db, 'entregadores', novoId), dadosEntregador),
-                setDoc(doc(db, 'usuarios', novoId), dadosUsuario)
+                setDoc(doc(db, 'entregadores', uidReal), dadosEntregador),
+                setDoc(doc(db, 'usuarios', uidReal), dadosUsuario)
             ]);
 
             document.getElementById('form-entregador').reset();
             carregarOpcoesSelects();
-            alert("Entregador e usuário criados com sucesso!");
+            alert("Entregador cadastrado e pronto para fazer login com a senha 102030!");
         } catch (err) {
             alert("Erro ao cadastrar: " + err.message);
         }
@@ -371,28 +375,30 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
         alert("Veículo cadastrado!");
     };
 
-    // Cadastro de Usuários (Gera Usuário + Entregador com nome em branco se perfil for entregador)
+    // Cadastro de Usuários do Sistema
     document.getElementById('form-usuario').onsubmit = async (e) => {
         e.preventDefault();
         const email = document.getElementById('u-email').value;
+        const senha = document.getElementById('u-senha').value;
         const perfil = document.getElementById('u-perfil').value;
 
         try {
-            const novoId = doc(collection(db, 'usuarios')).id;
+            // 1. Cria no Firebase Auth
+            const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
+            const uidReal = userCredential.user.uid;
 
             const dadosUsuario = {
                 email: email,
-                senha: "102030",
                 perfil: perfil,
                 ativo: true,
                 criadoEm: new Date()
             };
 
             const operacoes = [
-                setDoc(doc(db, 'usuarios', novoId), dadosUsuario)
+                setDoc(doc(db, 'usuarios', uidReal), dadosUsuario)
             ];
 
-            // Se o perfil for entregador, cria também na tabela entregador com nome em branco
+            // 2. Se for entregador, cria também na tabela entregadores vinculada pelo mesmo ID
             if (perfil === 'entregador') {
                 const dadosEntregador = {
                     nome: "",
@@ -401,19 +407,18 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
                     ativo: true,
                     criadoEm: new Date()
                 };
-                operacoes.push(setDoc(doc(db, 'entregadores', novoId), dadosEntregador));
+                operacoes.push(setDoc(doc(db, 'entregadores', uidReal), dadosEntregador));
             }
 
             await Promise.all(operacoes);
 
-            alert("Usuário criado com sucesso!");
+            alert("Acesso de usuário criado com sucesso no Authentication!");
             document.getElementById('form-usuario').reset();
             carregarOpcoesSelects();
         } catch (error) {
             alert("Erro: " + error.message);
         }
     };
-
     // Lançamento de Entrega
     document.getElementById('form-entrega').onsubmit = async (e) => {
         e.preventDefault();
