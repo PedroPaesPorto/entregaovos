@@ -7,7 +7,7 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
         <div class="mb-6 flex justify-between items-center border-b pb-4">
             <div>
                 <h3 class="font-semibold text-lg text-amber-600">Painel Administrativo</h3>
-                <p class="text-sm text-slate-500">Gerencie estoque, entregas, cadastros e acessos.</p>
+                <p class="text-sm text-slate-500">Gestão completa de estoque, rotas, cadastros e acessos.</p>
             </div>
             <span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-semibold">Admin</span>
         </div>
@@ -22,9 +22,8 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
             <button onclick="mudarAbaAdmin('usuarios')" id="btn-aba-usuarios" class="pb-2 font-medium text-slate-500 hover:text-amber-600 transition-all">Usuários</button>
         </div>
 
-        <!-- SEÇÃO ESTOQUE (NOVO) -->
+        <!-- SEÇÃO ESTOQUE -->
         <div id="secao-estoque" class="space-y-6">
-            <!-- Saldo Atual -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="bg-amber-50 p-4 rounded-xl border border-amber-200 flex justify-between items-center">
                     <div>
@@ -61,15 +60,15 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
                 <h4 class="font-medium text-slate-700 mb-3">Lançar Nova Entrega</h4>
                 <form id="form-entrega" class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-medium text-slate-500 mb-1">Cliente</label>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Cliente Ativo</label>
                         <select id="en-cliente" required class="w-full px-3 py-2 border rounded-lg bg-white text-sm"></select>
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-slate-500 mb-1">Entregador</label>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Entregador Ativo</label>
                         <select id="en-entregador" required class="w-full px-3 py-2 border rounded-lg bg-white text-sm"></select>
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-slate-500 mb-1">Veículo</label>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Veículo Ativo</label>
                         <select id="en-veiculo" required class="w-full px-3 py-2 border rounded-lg bg-white text-sm"></select>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
@@ -86,7 +85,6 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
                 </form>
             </div>
 
-            <!-- Mapa OpenStreetMap -->
             <div class="bg-white p-4 rounded-xl border">
                 <h4 class="font-medium text-slate-700 mb-3">Mapa de Rotas & Clientes (Porto Velho)</h4>
                 <div id="map" class="w-full h-96 rounded-lg z-0"></div>
@@ -114,7 +112,7 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
             </div>
             <div class="overflow-x-auto bg-white p-4 rounded-xl border">
                 <table class="w-full text-sm text-left border-collapse">
-                    <thead><tr class="border-b text-slate-400"><th class="p-2">Nome</th><th class="p-2">Telefone</th><th class="p-2">Endereço</th></tr></thead>
+                    <thead><tr class="border-b text-slate-400"><th class="p-2">Nome</th><th class="p-2">Telefone</th><th class="p-2">Endereço</th><th class="p-2">Status</th><th class="p-2">Ações</th></tr></thead>
                     <tbody id="tabela-clientes"></tbody>
                 </table>
             </div>
@@ -125,14 +123,15 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
             <div class="bg-slate-50 p-4 rounded-xl border">
                 <h4 class="font-medium text-slate-700 mb-3">Novo Entregador</h4>
                 <form id="form-entregador" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <input type="text" id="e-nome" placeholder="Nome" required class="px-3 py-2 border rounded-lg bg-white">
+                    <input type="text" id="e-nome" placeholder="Nome Completo" required class="px-3 py-2 border rounded-lg bg-white">
                     <input type="text" id="e-tel" placeholder="Telefone" required class="px-3 py-2 border rounded-lg bg-white">
+                    <input type="email" id="e-email" placeholder="E-mail correspondente (para vincular usuário)" class="md:col-span-2 px-3 py-2 border rounded-lg bg-white text-sm">
                     <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white font-medium px-4 py-2 rounded-lg transition-all">Salvar Entregador</button>
                 </form>
             </div>
             <div class="overflow-x-auto bg-white p-4 rounded-xl border">
                 <table class="w-full text-sm text-left border-collapse">
-                    <thead><tr class="border-b text-slate-400"><th class="p-2">Nome</th><th class="p-2">Telefone</th></tr></thead>
+                    <thead><tr class="border-b text-slate-400"><th class="p-2">Nome</th><th class="p-2">Telefone</th><th class="p-2">E-mail Vinculado</th><th class="p-2">Status</th><th class="p-2">Ações</th></tr></thead>
                     <tbody id="tabela-entregadores"></tbody>
                 </table>
             </div>
@@ -150,7 +149,7 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
             </div>
             <div class="overflow-x-auto bg-white p-4 rounded-xl border">
                 <table class="w-full text-sm text-left border-collapse">
-                    <thead><tr class="border-b text-slate-400"><th class="p-2">Modelo</th><th class="p-2">Placa</th></tr></thead>
+                    <thead><tr class="border-b text-slate-400"><th class="p-2">Modelo</th><th class="p-2">Placa</th><th class="p-2">Status</th><th class="p-2">Ações</th></tr></thead>
                     <tbody id="tabela-veiculos"></tbody>
                 </table>
             </div>
@@ -173,14 +172,26 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
             </div>
             <div class="overflow-x-auto bg-white p-4 rounded-xl border">
                 <table class="w-full text-sm text-left border-collapse">
-                    <thead><tr class="border-b text-slate-400"><th class="p-2">E-mail</th><th class="p-2">Perfil</th></tr></thead>
+                    <thead><tr class="border-b text-slate-400"><th class="p-2">E-mail</th><th class="p-2">Perfil</th><th class="p-2">Status</th><th class="p-2">Ações</th></tr></thead>
                     <tbody id="tabela-usuarios"></tbody>
                 </table>
             </div>
         </div>
+
+        <!-- MODAL GENÉRICO DE EDIÇÃO -->
+        <div id="modal-edicao" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-2xl p-6 w-full max-w-md space-y-4 shadow-xl">
+                <h4 id="modal-edicao-titulo" class="font-bold text-slate-800 text-lg">Editar Registro</h4>
+                <div id="modal-edicao-conteudo" class="space-y-3"></div>
+                <div class="flex gap-2 pt-2">
+                    <button type="button" id="btn-fechar-modal-edicao" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 py-2 rounded-lg text-sm font-medium transition-all">Cancelar</button>
+                    <button type="button" id="btn-salvar-edicao" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white py-2 rounded-lg text-sm font-medium transition-all">Salvar Alterações</button>
+                </div>
+            </div>
+        </div>
     `;
 
-    // Inicialização do Mapa Leaflet
+    // Inicialização do Mapa
     let map = L.map('map').setView([-8.7619, -63.9039], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
@@ -188,7 +199,6 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
 
     let markersLayer = L.layerGroup().addTo(map);
 
-    // Alternar Abas
     window.mudarAbaAdmin = (aba) => {
         ['estoque', 'entregas', 'clientes', 'entregadores', 'veiculos', 'usuarios'].forEach(a => {
             document.getElementById(`secao-${a}`).classList.toggle('hidden', a !== aba);
@@ -196,12 +206,10 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
                 ? "pb-2 font-medium text-amber-600 border-b-2 border-amber-600 transition-all" 
                 : "pb-2 font-medium text-slate-500 hover:text-amber-600 transition-all";
         });
-        if (aba === 'entregas') {
-            setTimeout(() => map.invalidateSize(), 200);
-        }
+        if (aba === 'entregas') setTimeout(() => map.invalidateSize(), 200);
     };
 
-    // Preencher Selects
+    // Preencher Selects apenas com itens ativos
     async function carregarOpcoesSelects() {
         const cSelect = document.getElementById('en-cliente');
         const eSelect = document.getElementById('en-entregador');
@@ -215,35 +223,37 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
         const cSnap = await getDocs(collection(db, 'clientes'));
         cSnap.forEach(docSnap => {
             const data = docSnap.data();
-            cSelect.innerHTML += `<option value="${data.nome}">${data.nome} (${data.endereco})</option>`;
+            if (data.ativo !== false) {
+                cSelect.innerHTML += `<option value="${data.nome}">${data.nome} (${data.endereco})</option>`;
+            }
         });
 
         const eSnap = await getDocs(collection(db, 'entregadores'));
         eSnap.forEach(docSnap => {
             const data = docSnap.data();
-            eSelect.innerHTML += `<option value="${data.nome}">${data.nome}</option>`;
+            if (data.ativo !== false) {
+                eSelect.innerHTML += `<option value="${data.nome}">${data.nome}</option>`;
+            }
         });
 
         const vSnap = await getDocs(collection(db, 'veiculos'));
         vSnap.forEach(docSnap => {
             const data = docSnap.data();
-            vSelect.innerHTML += `<option value="${data.modelo} - ${data.placa}">${data.modelo} (${data.placa})</option>`;
+            if (data.ativo !== false) {
+                vSelect.innerHTML += `<option value="${data.modelo} - ${data.placa}">${data.modelo} (${data.placa})</option>`;
+            }
         });
     }
 
     carregarOpcoesSelects();
 
-    // Calcular e atualizar Estoque em Tempo Real
+    // Controle de Estoque
     onSnapshot(collection(db, 'estoque_mov'), (snap) => {
-        let saldoB = 0;
-        let saldoV = 0;
+        let saldoB = 0, saldoV = 0;
         snap.forEach(doc => {
             const m = doc.data();
-            if (m.tipo === 'branco') {
-                saldoB += m.quantidade * (m.operacao === 'entrada' ? 1 : -1);
-            } else if (m.tipo === 'vermelho') {
-                saldoV += m.quantidade * (m.operacao === 'entrada' ? 1 : -1);
-            }
+            if (m.tipo === 'branco') saldoB += m.quantidade * (m.operacao === 'entrada' ? 1 : -1);
+            if (m.tipo === 'vermelho') saldoV += m.quantidade * (m.operacao === 'entrada' ? 1 : -1);
         });
         const elB = document.getElementById('saldo-branco');
         const elV = document.getElementById('saldo-vermelho');
@@ -251,27 +261,20 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
         if (elV) elV.textContent = `${saldoV} cartelas`;
     });
 
-    // Registrar Entrada no Estoque
     document.getElementById('form-estoque-entrada').onsubmit = async (e) => {
         e.preventDefault();
-        const tipo = document.getElementById('est-tipo').value;
-        const quantidade = parseInt(document.getElementById('est-qtd').value);
-        try {
-            await addDoc(collection(db, 'estoque_mov'), {
-                tipo,
-                quantidade,
-                operacao: 'entrada',
-                motivo: 'Compra fornecedor',
-                criadoEm: new Date()
-            });
-            document.getElementById('form-estoque-entrada').reset();
-            alert("Entrada registrada com sucesso!");
-        } catch (err) {
-            alert("Erro: " + err.message);
-        }
+        await addDoc(collection(db, 'estoque_mov'), {
+            tipo: document.getElementById('est-tipo').value,
+            quantidade: parseInt(document.getElementById('est-qtd').value),
+            operacao: 'entrada',
+            motivo: 'Compra fornecedor',
+            criadoEm: new Date()
+        });
+        document.getElementById('form-estoque-entrada').reset();
+        alert("Entrada registrada!");
     };
 
-    // Cadastros básicos
+    // Cadastro de Clientes
     document.getElementById('form-cliente').onsubmit = async (e) => { 
         e.preventDefault(); 
         const nome = document.getElementById('c-nome').value;
@@ -283,85 +286,42 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
             const data = await res.json();
             if (data && data.length > 0) { lat = parseFloat(data[0].lat); lng = parseFloat(data[0].lon); }
         } catch (err) {}
-        await addDoc(collection(db, 'clientes'), { nome, telefone, endereco, lat, lng, criadoEm: new Date() });
+        await addDoc(collection(db, 'clientes'), { nome, telefone, endereco, lat, lng, ativo: true, criadoEm: new Date() });
         document.getElementById('form-cliente').reset();
         carregarOpcoesSelects();
         alert("Cliente cadastrado!");
     };
 
+    // Cadastro de Entregadores
     document.getElementById('form-entregador').onsubmit = async (e) => { 
         e.preventDefault(); 
-        await addDoc(collection(db, 'entregadores'), { nome: document.getElementById('e-nome').value, telefone: document.getElementById('e-tel').value, criadoEm: new Date() });
+        await addDoc(collection(db, 'entregadores'), { 
+            nome: document.getElementById('e-nome').value, 
+            telefone: document.getElementById('e-tel').value, 
+            emailVinculado: document.getElementById('e-email').value || '',
+            ativo: true, 
+            criadoEm: new Date() 
+        });
         document.getElementById('form-entregador').reset();
         carregarOpcoesSelects();
         alert("Entregador cadastrado!");
     };
     
+    // Cadastro de Veículos
     document.getElementById('form-veiculo').onsubmit = async (e) => { 
         e.preventDefault(); 
-        await addDoc(collection(db, 'veiculos'), { modelo: document.getElementById('v-modelo').value, placa: document.getElementById('v-placa').value, criadoEm: new Date() });
+        await addDoc(collection(db, 'veiculos'), { 
+            modelo: document.getElementById('v-modelo').value, 
+            placa: document.getElementById('v-placa').value, 
+            ativo: true, 
+            criadoEm: new Date() 
+        });
         document.getElementById('form-veiculo').reset();
         carregarOpcoesSelects();
         alert("Veículo cadastrado!");
     };
 
-    // Lançar Entrega
-    document.getElementById('form-entrega').onsubmit = async (e) => {
-        e.preventDefault();
-        try {
-            await addDoc(collection(db, 'entregas'), {
-                cliente: document.getElementById('en-cliente').value,
-                entregador: document.getElementById('en-entregador').value,
-                veiculo: document.getElementById('en-veiculo').value,
-                branco: parseInt(document.getElementById('en-branco').value),
-                vermelho: parseInt(document.getElementById('en-vermelho').value),
-                status: 'Pendente',
-                criadoEm: new Date()
-            });
-            document.getElementById('form-entrega').reset();
-            alert("Entrega lançada com sucesso!");
-        } catch (err) {
-            alert("Erro ao lançar entrega: " + err.message);
-        }
-    };
-
-    // Funções globais para Ações nas Entregas (Concluir com Avarias ou Cancelar)
-    window.concluirEntrega = async (id, branco, vermelho) => {
-        const avariasBranco = parseInt(prompt("Quantas cartelas brancas tiveram avaria/quebra nesta entrega?", "0")) || 0;
-        const avariasVermelho = parseInt(prompt("Quantas cartelas vermelhas tiveram avaria/quebra nesta entrega?", "0")) || 0;
-
-        try {
-            // Atualiza status da entrega
-            const { doc: firestoreDoc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-            await updateDoc(firestoreDoc(db, 'entregas', id), { status: 'Concluída', avariasBranco, avariasVermelho });
-
-            // Dá baixa líquida no estoque (quantidade entregue + avarias vão sair do estoque)
-            if (branco > 0) {
-                await addDoc(collection(db, 'estoque_mov'), { tipo: 'branco', quantidade: branco, operacao: 'saida', motivo: 'Entrega realizada', criadoEm: new Date() });
-            }
-            if (vermelho > 0) {
-                await addDoc(collection(db, 'estoque_mov'), { tipo: 'vermelho', quantidade: vermelho, operacao: 'saida', motivo: 'Entrega realizada', criadoEm: new Date() });
-            }
-
-            alert("Entrega concluída e estoque baixado com sucesso!");
-        } catch (err) {
-            alert("Erro ao concluir: " + err.message);
-        }
-    };
-
-    window.cancelarEntrega = async (id) => {
-        if (confirm("Tem certeza que deseja cancelar esta entrega?")) {
-            try {
-                const { doc: firestoreDoc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-                await updateDoc(firestoreDoc(db, 'entregas', id), { status: 'Cancelada' });
-                alert("Entrega cancelada.");
-            } catch (err) {
-                alert("Erro ao cancelar: " + err.message);
-            }
-        }
-    };
-
-    // Criar Usuário
+    // Cadastro de Usuários
     document.getElementById('form-usuario').onsubmit = async (e) => {
         e.preventDefault();
         const email = document.getElementById('u-email').value;
@@ -374,7 +334,7 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
             const authTemp = getAuthTemp(appTemp);
 
             const cred = await createUserTemp(authTemp, email, senha);
-            await setDoc(doc(db, "usuarios", cred.user.uid), { email, perfil, criadoEm: new Date() });
+            await setDoc(doc(db, "usuarios", cred.user.uid), { email, perfil, ativo: true, criadoEm: new Date() });
             await signOutTemp(authTemp);
 
             alert("Usuário criado com sucesso!");
@@ -384,7 +344,132 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
         }
     };
 
-    // Monitores em Tempo Real
+    // Lançamento de Entrega
+    document.getElementById('form-entrega').onsubmit = async (e) => {
+        e.preventDefault();
+        await addDoc(collection(db, 'entregas'), {
+            cliente: document.getElementById('en-cliente').value,
+            entregador: document.getElementById('en-entregador').value,
+            veiculo: document.getElementById('en-veiculo').value,
+            branco: parseInt(document.getElementById('en-branco').value),
+            vermelho: parseInt(document.getElementById('en-vermelho').value),
+            status: 'Pendente',
+            criadoEm: new Date()
+        });
+        document.getElementById('form-entrega').reset();
+        alert("Entrega lançada!");
+    };
+
+    // Funções de Alternar Status (Ativar / Desativar em Cascata para Entregadores)
+    window.alternarStatus = async (colecao, id, estadoAtual, emailVinculado = null) => {
+        const novoStatus = !estadoAtual;
+        try {
+            await updateDoc(doc(db, colecao, id), { ativo: novoStatus });
+
+            // Se for entregador e foi desativado, desativa o usuário correspondente no Firestore se houver e-mail vinculado
+            if (colecao === 'entregadores' && !novoStatus && emailVinculado) {
+                const uSnap = await getDocs(collection(db, 'usuarios'));
+                uSnap.forEach(async (uDoc) => {
+                    if (uDoc.data().email === emailVinculado) {
+                        await updateDoc(doc(db, 'usuarios', uDoc.id), { ativo: false });
+                    }
+                });
+            }
+
+            carregarOpcoesSelects();
+            alert(`Registro ${novoStatus ? 'ativado' : 'desativado'} com sucesso!`);
+        } catch (err) {
+            alert("Erro ao alterar status: " + err.message);
+        }
+    };
+
+    // Modal de Edição Genérica
+    const modalEdicao = document.getElementById('modal-edicao');
+    document.getElementById('btn-fechar-modal-edicao').onclick = () => modalEdicao.classList.add('hidden');
+
+    window.abrirEdicaoCliente = (id, nome, telefone, endereco) => {
+        document.getElementById('modal-edicao-titulo').textContent = "Editar Cliente";
+        document.getElementById('modal-edicao-conteudo').innerHTML = `
+            <input type="text" id="edit-c-nome" value="${nome}" class="w-full px-3 py-2 border rounded-lg text-sm">
+            <input type="text" id="edit-c-tel" value="${telefone}" class="w-full px-3 py-2 border rounded-lg text-sm">
+            <input type="text" id="edit-c-end" value="${endereco}" class="w-full px-3 py-2 border rounded-lg text-sm">
+        `;
+        document.getElementById('btn-salvar-edicao').onclick = async () => {
+            const novoNome = document.getElementById('edit-c-nome').value;
+            const novoTel = document.getElementById('edit-c-tel').value;
+            const novoEnd = document.getElementById('edit-c-end'].value;
+            let lat = -8.7619, lng = -63.9039;
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(novoEnd + ", Porto Velho, RO")}`);
+                const data = await res.json();
+                if (data && data.length > 0) { lat = parseFloat(data[0].lat); lng = parseFloat(data[0].lon); }
+            } catch (err) {}
+            await updateDoc(doc(db, 'clientes', id), { nome: novoNome, telefone: novoTel, endereco: novoEnd, lat, lng });
+            modalEdicao.classList.add('hidden');
+            carregarOpcoesSelects();
+            alert("Cliente atualizado!");
+        };
+        modalEdicao.classList.remove('hidden');
+    };
+
+    window.abrirEdicaoEntregador = (id, nome, telefone, emailVinculado) => {
+        document.getElementById('modal-edicao-titulo').textContent = "Editar Entregador";
+        document.getElementById('modal-edicao-conteudo').innerHTML = `
+            <input type="text" id="edit-e-nome" value="${nome}" class="w-full px-3 py-2 border rounded-lg text-sm">
+            <input type="text" id="edit-e-tel" value="${telefone}" class="w-full px-3 py-2 border rounded-lg text-sm">
+            <input type="email" id="edit-e-email" value="${emailVinculado || ''}" placeholder="E-mail vinculado" class="w-full px-3 py-2 border rounded-lg text-sm">
+        `;
+        document.getElementById('btn-salvar-edicao').onclick = async () => {
+            await updateDoc(doc(db, 'entregadores', id), {
+                nome: document.getElementById('edit-e-nome').value,
+                telefone: document.getElementById('edit-e-tel').value,
+                emailVinculado: document.getElementById('edit-e-email').value
+            });
+            modalEdicao.classList.add('hidden');
+            carregarOpcoesSelects();
+            alert("Entregador atualizado!");
+        };
+        modalEdicao.classList.remove('hidden');
+    };
+
+    window.abrirEdicaoVeiculo = (id, modelo, placa) => {
+        document.getElementById('modal-edicao-titulo').textContent = "Editar Veículo";
+        document.getElementById('modal-edicao-conteudo').innerHTML = `
+            <input type="text" id="edit-v-modelo" value="${modelo}" class="w-full px-3 py-2 border rounded-lg text-sm">
+            <input type="text" id="edit-v-placa" value="${placa}" class="w-full px-3 py-2 border rounded-lg text-sm">
+        `;
+        document.getElementById('btn-salvar-edicao').onclick = async () => {
+            await updateDoc(doc(db, 'veiculos', id), {
+                modelo: document.getElementById('edit-v-modelo').value,
+                placa: document.getElementById('edit-v-placa').value
+            });
+            modalEdicao.classList.add('hidden');
+            carregarOpcoesSelects();
+            alert("Veículo atualizado!");
+        };
+        modalEdicao.classList.remove('hidden');
+    };
+
+    window.abrirEdicaoUsuario = (id, perfil) => {
+        document.getElementById('modal-edicao-titulo').textContent = "Editar Perfil do Usuário";
+        document.getElementById('modal-edicao-conteudo').innerHTML = `
+            <select id="edit-u-perfil" class="w-full px-3 py-2 border rounded-lg text-sm bg-white">
+                <option value="entregador" ${perfil === 'entregador' ? 'selected' : ''}>Entregador</option>
+                <option value="financeiro" ${perfil === 'financeiro' ? 'selected' : ''}>Financeiro</option>
+                <option value="admin" ${perfil === 'admin' ? 'selected' : ''}>Administrador</option>
+            </select>
+        `;
+        document.getElementById('btn-salvar-edicao').onclick = async () => {
+            await updateDoc(doc(db, 'usuarios', id), {
+                perfil: document.getElementById('edit-u-perfil').value
+            });
+            modalEdicao.classList.add('hidden');
+            alert("Usuário atualizado!");
+        };
+        modalEdicao.classList.remove('hidden');
+    };
+
+    // Monitores em Tempo Real com Renderização de Status e Ações
     const monitorar = (colecao, tabelaId, render) => {
         onSnapshot(query(collection(db, colecao), orderBy("criadoEm", "desc")), (snap) => {
             const tab = document.getElementById(tabelaId);
@@ -394,11 +479,61 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
         });
     };
 
-    monitorar('clientes', 'tabela-clientes', (d) => `<tr class="border-b hover:bg-slate-50"><td class="p-2 font-medium">${d.nome}</td><td class="p-2">${d.telefone}</td><td class="p-2">${d.endereco}</td></tr>`);
-    monitorar('entregadores', 'tabela-entregadores', (d) => `<tr class="border-b hover:bg-slate-50"><td class="p-2 font-medium">${d.nome}</td><td class="p-2">${d.telefone}</td></tr>`);
-    monitorar('veiculos', 'tabela-veiculos', (d) => `<tr class="border-b hover:bg-slate-50"><td class="p-2 font-medium">${d.modelo}</td><td class="p-2">${d.placa}</td></tr>`);
-    monitorar('usuarios', 'tabela-usuarios', (d) => `<tr class="border-b hover:bg-slate-50"><td class="p-2 font-medium">${d.email}</td><td class="p-2 uppercase text-xs font-bold text-amber-600">${d.perfil}</td></tr>`);
-    
+    monitorar('clientes', 'tabela-clientes', (d, id) => {
+        const ativo = d.ativo !== false;
+        return `<tr class="border-b hover:bg-slate-50 ${!ativo ? 'opacity-50 bg-slate-50' : ''}">
+            <td class="p-2 font-medium">${d.nome}</td>
+            <td class="p-2">${d.telefone}</td>
+            <td class="p-2">${d.endereco}</td>
+            <td class="p-2"><span class="${ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} text-xs px-2 py-0.5 rounded font-semibold">${ativo ? 'Ativo' : 'Inativo'}</span></td>
+            <td class="p-2 space-x-1">
+                <button onclick="abrirEdicaoCliente('${id}', '${d.nome}', '${d.telefone}', '${d.endereco}')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded">Editar</button>
+                <button onclick="alternarStatus('clientes', '${id}', ${ativo})" class="${ativo ? 'bg-rose-500 hover:bg-rose-600' : 'bg-emerald-600 hover:bg-emerald-700'} text-white text-xs px-2 py-1 rounded">${ativo ? 'Desativar' : 'Ativar'}</button>
+            </td>
+        </tr>`;
+    });
+
+    monitorar('entregadores', 'tabela-entregadores', (d, id) => {
+        const ativo = d.ativo !== false;
+        return `<tr class="border-b hover:bg-slate-50 ${!ativo ? 'opacity-50 bg-slate-50' : ''}">
+            <td class="p-2 font-medium">${d.nome}</td>
+            <td class="p-2">${d.telefone}</td>
+            <td class="p-2 text-slate-500 text-xs">${d.emailVinculado || 'Não vinculado'}</td>
+            <td class="p-2"><span class="${ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} text-xs px-2 py-0.5 rounded font-semibold">${ativo ? 'Ativo' : 'Inativo'}</span></td>
+            <td class="p-2 space-x-1">
+                <button onclick="abrirEdicaoEntregador('${id}', '${d.nome}', '${d.telefone}', '${d.emailVinculado || ''}')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded">Editar</button>
+                <button onclick="alternarStatus('entregadores', '${id}', ${ativo}, '${d.emailVinculado || ''}')" class="${ativo ? 'bg-rose-500 hover:bg-rose-600' : 'bg-emerald-600 hover:bg-emerald-700'} text-white text-xs px-2 py-1 rounded">${ativo ? 'Desativar' : 'Ativar'}</button>
+            </td>
+        </tr>`;
+    });
+
+    monitorar('veiculos', 'tabela-veiculos', (d, id) => {
+        const ativo = d.ativo !== false;
+        return `<tr class="border-b hover:bg-slate-50 ${!ativo ? 'opacity-50 bg-slate-50' : ''}">
+            <td class="p-2 font-medium">${d.modelo}</td>
+            <td class="p-2">${d.placa}</td>
+            <td class="p-2"><span class="${ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} text-xs px-2 py-0.5 rounded font-semibold">${ativo ? 'Ativo' : 'Inativo'}</span></td>
+            <td class="p-2 space-x-1">
+                <button onclick="abrirEdicaoVeiculo('${id}', '${d.modelo}', '${d.placa}')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded">Editar</button>
+                <button onclick="alternarStatus('veiculos', '${id}', ${ativo})" class="${ativo ? 'bg-rose-500 hover:bg-rose-600' : 'bg-emerald-600 hover:bg-emerald-700'} text-white text-xs px-2 py-1 rounded">${ativo ? 'Desativar' : 'Ativar'}</button>
+            </td>
+        </tr>`;
+    });
+
+    monitorar('usuarios', 'tabela-usuarios', (d, id) => {
+        const ativo = d.ativo !== false;
+        return `<tr class="border-b hover:bg-slate-50 ${!ativo ? 'opacity-50 bg-slate-50' : ''}">
+            <td class="p-2 font-medium">${d.email}</td>
+            <td class="p-2 uppercase text-xs font-bold text-amber-600">${d.perfil}</td>
+            <td class="p-2"><span class="${ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} text-xs px-2 py-0.5 rounded font-semibold">${ativo ? 'Ativo' : 'Inativo'}</span></td>
+            <td class="p-2 space-x-1">
+                <button onclick="abrirEdicaoUsuario('${id}', '${d.perfil}')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded">Editar</button>
+                <button onclick="alternarStatus('usuarios', '${id}', ${ativo})" class="${ativo ? 'bg-rose-500 hover:bg-rose-600' : 'bg-emerald-600 hover:bg-emerald-700'} text-white text-xs px-2 py-1 rounded">${ativo ? 'Desativar' : 'Ativar'}</button>
+            </td>
+        </tr>`;
+    });
+
+    // Monitorar Entregas
     onSnapshot(query(collection(db, 'entregas'), orderBy("criadoEm", "desc")), async (snap) => {
         const tab = document.getElementById('tabela-entregas');
         if (!tab) return;
@@ -411,15 +546,10 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
             if (data.status === 'Concluída') badgeColor = 'bg-green-100 text-green-800';
             if (data.status === 'Cancelada') badgeColor = 'bg-red-100 text-red-800';
 
-            let acoes = '';
-            if (data.status === 'Pendente') {
-                acoes = `
-                    <button onclick="concluirEntrega('${id}', ${data.branco}, ${data.vermelho})" class="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1 rounded mr-1">Concluir</button>
-                    <button onclick="cancelarEntrega('${id}')" class="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded">Cancelar</button>
-                `;
-            } else {
-                acoes = `<span class="text-xs text-slate-400">Finalizada</span>`;
-            }
+            let acoes = data.status === 'Pendente' ? `
+                <button onclick="concluirEntrega('${id}', ${data.branco}, ${data.vermelho})" class="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1 rounded mr-1">Concluir</button>
+                <button onclick="cancelarEntrega('${id}')" class="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded">Cancelar</button>
+            ` : `<span class="text-xs text-slate-400">Finalizada</span>`;
 
             tab.innerHTML += `
                 <tr class="border-b hover:bg-slate-50">
@@ -435,7 +565,7 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
         const clientesSnap = await getDocs(collection(db, 'clientes'));
         clientesSnap.forEach(cliDoc => {
             const c = cliDoc.data();
-            if (c.lat && c.lng) {
+            if (c.ativo !== false && c.lat && c.lng) {
                 L.marker([c.lat, c.lng]).addTo(markersLayer).bindPopup(`<b>${c.nome}</b><br>${c.endereco}`);
             }
         });
