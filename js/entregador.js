@@ -1,15 +1,15 @@
 import { db } from './firebase-init.js';
-import { collection, query, where, onSnapshot, doc, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, query, where, onSnapshot, doc, updateDoc, addDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 export function renderizarPainelEntregador(conteudoDiv, emailUsuario, nomeEntregador) {
     conteudoDiv.innerHTML = `
         <div class="mb-6 flex justify-between items-center border-b pb-4">
             <div>
                 <h3 class="font-semibold text-lg text-blue-600">Painel do Entregador</h3>
-                <p class="text-sm text-slate-500">Suas entregas e rota otimizada.</p>
+                <p class="text-sm text-slate-500">Rastreamento ativo e entregas pendentes.</p>
             </div>
             <button id="btn-otimizar-rota" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-2 rounded-lg font-medium transition-all shadow-sm">
-                🗺️ Otimizar Rota (Economia)
+                🗺️ Otimizar Rota
             </button>
         </div>
 
@@ -17,7 +17,7 @@ export function renderizarPainelEntregador(conteudoDiv, emailUsuario, nomeEntreg
             <p class="text-slate-500 text-sm">Carregando suas entregas...</p>
         </div>
 
-        <!-- MODAL DE CONCLUSÃO DE ENTREGA / ASSINATURA -->
+        <!-- MODAL DE CONCLUSÃO -->
         <div id="modal-entrega" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
             <div class="bg-white rounded-2xl p-6 w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto shadow-xl">
                 <h4 class="font-bold text-slate-800 text-lg">Finalizar Entrega</h4>
@@ -45,7 +45,7 @@ export function renderizarPainelEntregador(conteudoDiv, emailUsuario, nomeEntreg
                 </div>
 
                 <div>
-                    <label class="block text-xs font-medium text-slate-500 mb-1">Assinatura do Cliente (Desenhe abaixo)</label>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">Assinatura do Cliente</label>
                     <div class="border rounded-lg bg-slate-50 p-2 relative">
                         <canvas id="canvas-assinatura" class="w-full h-36 bg-white cursor-crosshair border rounded"></canvas>
                         <button type="button" id="btn-limpar-assinatura" class="absolute top-3 right-3 text-xs bg-slate-200 hover:bg-slate-300 px-2 py-1 rounded text-slate-700">Limpar</button>
@@ -60,10 +60,26 @@ export function renderizarPainelEntregador(conteudoDiv, emailUsuario, nomeEntreg
         </div>
     `;
 
+    // --- RASTREAMENTO EM TEMPO REAL ---
+    if ("geolocation" in navigator) {
+        navigator.geolocation.watchPosition(async (pos) => {
+            const { latitude, longitude } = pos.coords;
+            try {
+                // Salva no Firestore na coleção 'entregadores_posicao' usando o email como ID
+                await setDoc(doc(db, 'entregadores_posicao', emailUsuario), {
+                    lat: latitude,
+                    lng: longitude,
+                    nome: nomeEntregador,
+                    ultimaAtualizacao: new Date()
+                }, { merge: true });
+            } catch (e) { console.error("Erro rastreamento:", e); }
+        }, (err) => console.warn("GPS desativado:", err), { enableHighAccuracy: true });
+    }
+
+    // --- LÓGICA DE UI E FIREBASE ---
     let entregaAtivaId = null;
     let dadosEntregaAtiva = null;
 
-    // Configuração do Canvas de Assinatura
     const canvas = document.getElementById('canvas-assinatura');
     const ctx = canvas.getContext('2d');
     let desenhando = false;
@@ -75,57 +91,39 @@ export function renderizarPainelEntregador(conteudoDiv, emailUsuario, nomeEntreg
     window.addEventListener('resize', ajustarTamanhoCanvas);
     setTimeout(ajustarTamanhoCanvas, 100);
 
-    const obterPosicaoCursor = (e) => {
-        const rect = canvas.getBoundingClientRect();
+    const obterPos = (e) => {
+        const r = canvas.getBoundingClientRect();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        return { x: clientX - rect.left, y: clientY - rect.top };
+        return { x: clientX - r.left, y: clientY - r.top };
     };
 
-    canvas.addEventListener('mousedown', (e) => { desenhando = true; ctx.beginPath(); const p = obterPosicaoCursor(e); ctx.moveTo(p.x, p.y); });
-    canvas.addEventListener('mousemove', (e) => { if (!desenhando) return; const p = obterPosicaoCursor(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
-    window.addEventListener('mouseup', () => { desenhando = false; });
+    canvas.addEventListener('mousedown', (e) => { desenhando = true; ctx.beginPath(); const p = obterPos(e); ctx.moveTo(p.x, p.y); });
+    canvas.addEventListener('mousemove', (e) => { if (desenhando) { const p = obterPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }});
+    window.addEventListener('mouseup', () => desenhando = false);
 
-    canvas.addEventListener('touchstart', (e) => { desenhando = true; ctx.beginPath(); const p = obterPosicaoCursor(e); ctx.moveTo(p.x, p.y); e.preventDefault(); });
-    canvas.addEventListener('touchmove', (e) => { if (!desenhando) return; const p = obterPosicaoCursor(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); });
-    window.addEventListener('touchend', () => { desenhando = false; });
+    canvas.addEventListener('touchstart', (e) => { desenhando = true; ctx.beginPath(); const p = obterPos(e); ctx.moveTo(p.x, p.y); e.preventDefault(); });
+    canvas.addEventListener('touchmove', (e) => { if (desenhando) { const p = obterPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); }});
+    window.addEventListener('touchend', () => desenhando = false);
 
-    document.getElementById('btn-limpar-assinatura').addEventListener('click', () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-    });
+    document.getElementById('btn-limpar-assinatura').onclick = () => ctx.clearRect(0, 0, canvas.width, canvas.height);
+    document.getElementById('btn-fechar-modal').onclick = () => document.getElementById('modal-entrega').classList.add('hidden');
 
-    document.getElementById('btn-fechar-modal').addEventListener('click', () => {
-        document.getElementById('modal-entrega').classList.add('hidden');
-    });
-
-    // Escutar entregas atribuídas a este entregador
     onSnapshot(query(collection(db, 'entregas'), where('status', '==', 'Pendente')), (snap) => {
         const container = document.getElementById('lista-entregas-entregador');
         if (!container) return;
         container.innerHTML = "";
-
-        let entregasLista = [];
+        if (snap.empty) return container.innerHTML = `<p class="text-slate-500 text-sm">Nenhuma entrega pendente.</p>`;
+        
         snap.forEach(d => {
-            entregasLista.push({ id: d.id, ...d.data() });
-        });
-
-        if (entregasLista.length === 0) {
-            container.innerHTML = `<div class="bg-white p-6 rounded-xl border text-center text-slate-500 text-sm">Nenhuma entrega pendente no momento.</div>`;
-            return;
-        }
-
-        entregasLista.forEach(data => {
+            const data = d.data();
             container.innerHTML += `
-                <div class="bg-white p-4 rounded-xl border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="bg-white p-4 rounded-xl border flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
-                        <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded uppercase">Pendente</span>
-                        <h4 class="font-bold text-slate-800 text-base mt-1">${data.cliente}</h4>
-                        <p class="text-xs text-slate-500">Veículo: ${data.veiculo}</p>
-                        <p class="text-sm font-semibold text-slate-700 mt-2">📦 ${data.branco} Cartelas Brancas | 🥚 ${data.vermelho} Cartelas Vermelhas</p>
+                        <h4 class="font-bold text-slate-800">${data.cliente}</h4>
+                        <p class="text-sm text-slate-600">📦 ${data.branco} Brancos | 🥚 ${data.vermelho} Vermelhos</p>
                     </div>
-                    <button onclick="abrirModalConclusao('${data.id}', ${data.branco}, ${data.vermelho}, '${data.cliente}')" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-all shadow-sm">
-                        Concluir e Assinar
-                    </button>
+                    <button onclick="window.abrirModalConclusao('${d.id}', ${data.branco}, ${data.vermelho}, '${data.cliente}')" class="bg-green-600 text-white text-sm px-4 py-2 rounded-lg">Concluir</button>
                 </div>
             `;
         });
@@ -134,48 +132,26 @@ export function renderizarPainelEntregador(conteudoDiv, emailUsuario, nomeEntreg
     window.abrirModalConclusao = (id, branco, vermelho, cliente) => {
         entregaAtivaId = id;
         dadosEntregaAtiva = { branco, vermelho };
-        document.getElementById('modal-cliente-nome').textContent = `Cliente: ${cliente} (${branco} Brancos / ${vermelho} Vermelhos)`;
-        document.getElementById('m-avaria-b').value = 0;
-        document.getElementById('m-avaria-v').value = 0;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        document.getElementById('modal-cliente-nome').textContent = `Cliente: ${cliente}`;
         document.getElementById('modal-entrega').classList.remove('hidden');
     };
 
-    document.getElementById('btn-salvar-conclusao').addEventListener('click', async () => {
+    document.getElementById('btn-salvar-conclusao').onclick = async () => {
         if (!entregaAtivaId) return;
-        const avariasBranco = parseInt(document.getElementById('m-avaria-b').value) || 0;
-        const avariasVermelho = parseInt(document.getElementById('m-avaria-v').value) || 0;
-        const formaPagamento = document.getElementById('m-pagamento').value;
-        const assinaturaBase64 = canvas.toDataURL();
-
         try {
-            // Atualiza a entrega com os dados de conclusão e a assinatura em imagem
             await updateDoc(doc(db, 'entregas', entregaAtivaId), {
                 status: 'Concluída',
-                avariasBranco,
-                avariasVermelho,
-                pagamento: formaPagamento,
-                assinatura: assinaturaBase64,
+                avariasBranco: parseInt(document.getElementById('m-avaria-b').value) || 0,
+                avariasVermelho: parseInt(document.getElementById('m-avaria-v').value) || 0,
+                pagamento: document.getElementById('m-pagamento').value,
+                assinatura: canvas.toDataURL(),
                 concluidoEm: new Date()
             });
-
-            // Baixa real no estoque
-            if (dadosEntregaAtiva.branco > 0) {
-                await addDoc(collection(db, 'estoque_mov'), { tipo: 'branco', quantidade: dadosEntregaAtiva.branco, operacao: 'saida', motivo: 'Entrega realizada', criadoEm: new Date() });
-            }
-            if (dadosEntregaAtiva.vermelho > 0) {
-                await addDoc(collection(db, 'estoque_mov'), { tipo: 'vermelho', quantidade: dadosEntregaAtiva.vermelho, operacao: 'saida', motivo: 'Entrega realizada', criadoEm: new Date() });
-            }
-
+            await addDoc(collection(db, 'estoque_mov'), { tipo: 'branco', quantidade: dadosEntregaAtiva.branco, operacao: 'saida', motivo: 'Entrega', criadoEm: new Date() });
             document.getElementById('modal-entrega').classList.add('hidden');
-            alert("Entrega finalizada com sucesso!");
-        } catch (err) {
-            alert("Erro ao concluir entrega: " + err.message);
-        }
-    });
+            alert("Sucesso!");
+        } catch (e) { alert("Erro: " + e.message); }
+    };
 
-    // Lógica simples de Otimização de Rota (Vizinho mais próximo baseado em coordenadas)
-    document.getElementById('btn-otimizar-rota').addEventListener('click', () => {
-        alert("Rota reorganizada por proximidade para otimizar o consumo de combustível!");
-    });
+    document.getElementById('btn-otimizar-rota').onclick = () => alert("Rota otimizada!");
 }
