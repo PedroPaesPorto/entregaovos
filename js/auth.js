@@ -1,44 +1,40 @@
 import { auth, db } from './firebase-init.js';
 import { signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { renderizarPainelAdmin } from './admin.js'; // <-- Importa o painel admin
 
-// 1. Função que o app.js está procurando
 export async function verificarLoginEExibirTela(user) {
     const appDiv = document.getElementById('app');
     
     try {
-        // Busca o cargo/perfil do usuário no Firestore (coleção 'usuarios')
         const userDocRef = doc(db, "usuarios", user.uid);
         const userSnap = await getDoc(userDocRef);
 
-        let perfil = "entregador"; // Padrão caso não ache
+        let perfil = "entregador"; 
         if (userSnap.exists()) {
-            perfil = userSnap.data().perfil; // 'admin', 'financeiro' ou 'entregador'
+            perfil = userSnap.data().perfil; 
         }
 
-        // Renderiza o painel baseado no nível de acesso
         appDiv.innerHTML = `
             <div class="p-6 max-w-4xl mx-auto">
                 <div class="bg-white p-6 rounded-xl shadow-sm border flex justify-between items-center mb-6">
                     <div>
-                        <h2 class="text-xl font-bold text-slate-800">Painel Principal</h2>
-                        <p class="text-sm text-slate-500">Logado como: ${user.email} <span class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded uppercase font-semibold">${perfil}</span></p>
+                        <h2 class="text-xl font-bold text-slate-800">Sistema de Ovos</h2>
+                        <p class="text-sm text-slate-500">${user.email} <span class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded uppercase font-semibold">${perfil}</span></p>
                     </div>
                     <button id="btn-sair" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm transition-all">Sair</button>
                 </div>
                 <div id="painel-conteudo" class="bg-white p-6 rounded-xl shadow-sm border">
-                    <p class="text-slate-600">Carregando módulos do perfil <b>${perfil}</b>...</p>
+                    <p class="text-slate-600">Carregando painel...</p>
                 </div>
             </div>
         `;
 
-        // Ação do botão de logout
         document.getElementById('btn-sair').addEventListener('click', () => {
             signOut(auth);
         });
 
-        // Aqui depois vamos chamar os módulos específicos (admin, financeiro, entregador)
-        carregarModuloPorPerfil(perfil);
+        carregarModuloPorPerfil(perfil, user.email);
 
     } catch (error) {
         console.error("Erro ao carregar dados do usuário:", error);
@@ -46,7 +42,6 @@ export async function verificarLoginEExibirTela(user) {
     }
 }
 
-// 2. Função para desenhar a Tela de Login caso o usuário não esteja autenticado
 export function exibirTelaLogin() {
     const appDiv = document.getElementById('app');
     appDiv.innerHTML = `
@@ -87,13 +82,13 @@ export function exibirTelaLogin() {
     });
 }
 
-function carregarModuloPorPerfil(perfil) {
+function carregarModuloPorPerfil(perfil, email) {
     const conteudo = document.getElementById('painel-conteudo');
     if (perfil === 'admin') {
-        conteudo.innerHTML = `<h3 class="font-semibold text-lg text-amber-600 mb-2">Painel Administrativo</h3><p>Aqui ficarão os cadastros de Clientes, Entregadores, Veículos e o Mapa Geral.</p>`;
+        renderizarPainelAdmin(conteudo, email);
     } else if (perfil === 'financeiro') {
-        conteudo.innerHTML = `<h3 class="font-semibold text-lg text-emerald-600 mb-2">Painel Financeiro</h3><p>Aqui ficarão os relatórios de faturamento, caixas e pagamentos.</p>`;
+        conteudo.innerHTML = `<h3 class="font-semibold text-lg text-emerald-600 mb-2">Painel Financeiro</h3><p>Módulo financeiro em desenvolvimento.</p>`;
     } else {
-        conteudo.innerHTML = `<h3 class="font-semibold text-lg text-blue-600 mb-2">Painel do Entregador</h3><p>Aqui ficarão apenas as suas entregas atribuídas e rota de entrega.</p>`;
+        conteudo.innerHTML = `<h3 class="font-semibold text-lg text-blue-600 mb-2">Painel do Entregador</h3><p>Módulo de entregas em desenvolvimento.</p>`;
     }
 }
