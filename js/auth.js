@@ -1,7 +1,43 @@
 import { auth, db } from './firebase-init.js';
 import { signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { renderizarPainelAdmin } from './admin.js'; // <-- Importa o painel admin
+import { renderizarPainelAdmin } from './admin.js';
+
+let temporizadorInatividade = null;
+const TEMPO_LIMITE = 5 * 60 * 1000; // 5 minutos em milissegundos
+
+function reiniciarContadorInatividade() {
+    clearTimeout(temporizadorInatividade);
+    
+    temporizadorInatividade = setTimeout(() => {
+        // Se passar o tempo sem atividade, faz logout automático
+        signOut(auth).then(() => {
+            alert("Sessão encerrada por inatividade (5 minutos sem uso).");
+        }).catch((error) => {
+            console.error("Erro ao encerrar sessão:", error);
+        });
+    }, TEMPO_LIMITE);
+}
+
+function iniciarMonitoramentoInatividade() {
+    // Eventos que indicam que o usuário está mexendo no sistema
+    const eventos = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    
+    eventos.forEach(evento => {
+        window.addEventListener(evento, reiniciarContadorInatividade);
+    });
+    
+    // Inicia a contagem pela primeira vez
+    reiniciarContadorInatividade();
+}
+
+function pararMonitoramentoInatividade() {
+    const eventos = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    eventos.forEach(evento => {
+        window.removeEventListener(evento, reiniciarContadorInatividade);
+    });
+    clearTimeout(temporizadorInatividade);
+}
 
 export async function verificarLoginEExibirTela(user) {
     const appDiv = document.getElementById('app');
@@ -31,8 +67,12 @@ export async function verificarLoginEExibirTela(user) {
         `;
 
         document.getElementById('btn-sair').addEventListener('click', () => {
+            pararMonitoramentoInatividade();
             signOut(auth);
         });
+
+        // Ativa o monitor de 5 minutos de inatividade
+        iniciarMonitoramentoInatividade();
 
         carregarModuloPorPerfil(perfil, user.email);
 
@@ -43,6 +83,9 @@ export async function verificarLoginEExibirTela(user) {
 }
 
 export function exibirTelaLogin() {
+    // Garante que o monitor de inatividade está desligado na tela de login
+    pararMonitoramentoInatividade();
+
     const appDiv = document.getElementById('app');
     appDiv.innerHTML = `
         <div class="min-h-screen flex items-center justify-center bg-slate-100 px-4">
