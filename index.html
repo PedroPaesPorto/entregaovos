@@ -68,9 +68,9 @@
                             </tr>
                         </thead>
                         <tbody id="tabela-clientes" class="text-sm text-slate-700">
-                            <!-- Os dados entram aqui via JavaScript -->
+                            <!-- Os dados entram aqui via JavaScript em tempo real -->
                              <tr>
-                                <td colspan="3" class="py-4 text-center text-slate-400">Nenhum cliente cadastrado ainda.</td>
+                                <td colspan="3" class="py-4 text-center text-slate-400">Carregando clientes...</td>
                              </tr>
                         </tbody>
                     </table>
@@ -128,13 +128,12 @@
 
     </main>
 
-    <!-- Script básico para alternar abas -->
-   <!-- Firebase SDKs -->
+    <!-- Scripts e Lógica do Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Sua configuração
+        // Sua configuração do Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBrwxhCxatKrqyJxzRdhX2t54D7_-xQM18",
             authDomain: "sistema-ovos-distribuicao.firebaseapp.com",
@@ -147,7 +146,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Função de alternar abas (mantida do código anterior)
+        // Função de alternar abas
         window.mudarAba = function(abaDestino) {
             ['clientes', 'entregadores', 'veiculos', 'entregas'].forEach(aba => {
                 document.getElementById(`aba-${aba}`).classList.add('hidden');
@@ -172,11 +171,34 @@
                     endereco: end,
                     dataCadastro: new Date()
                 });
-                alert("Cliente salvo com sucesso!");
                 document.getElementById('form-cliente').reset();
             } catch (e) {
                 alert("Erro ao salvar: " + e.message);
             }
+        });
+
+        // Preencher a tabela de clientes em tempo real
+        const q = query(collection(db, "clientes"), orderBy("dataCadastro", "desc"));
+        
+        onSnapshot(q, (snapshot) => {
+            const tabela = document.getElementById('tabela-clientes');
+            tabela.innerHTML = ""; // Limpa a tabela atual
+            
+            if (snapshot.empty) {
+                tabela.innerHTML = `<tr><td colspan="3" class="py-4 text-center text-slate-400">Nenhum cliente cadastrado ainda.</td></tr>`;
+                return;
+            }
+
+            snapshot.forEach((doc) => {
+                const cliente = doc.data();
+                tabela.innerHTML += `
+                    <tr class="border-b hover:bg-amber-50">
+                        <td class="py-3 px-3 font-medium">${cliente.nome}</td>
+                        <td class="py-3 px-3">${cliente.telefone}</td>
+                        <td class="py-3 px-3">${cliente.endereco}</td>
+                    </tr>
+                `;
+            });
         });
     </script>
 </body>
