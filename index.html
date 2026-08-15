@@ -4,136 +4,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Ovos - Gestão de Entregas</title>
-    <!-- Tailwind CSS para estilização rápida e bonita -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-100 min-h-screen font-sans">
 
-    <!-- Cabeçalho do Sistema -->
     <header class="bg-amber-600 text-white shadow-md">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 class="text-xl font-bold flex items-center gap-2">
-                🥚 Controle de Ovos & Entregas
-            </h1>
-            <span class="text-xs bg-amber-700 px-2.5 py-1 rounded-full">Painel Operacional</span>
+            <h1 class="text-xl font-bold">🥚 Controle de Ovos & Entregas</h1>
         </div>
     </header>
 
-    <!-- Navegação por Abas -->
     <nav class="bg-white shadow-sm border-b">
         <div class="container mx-auto px-4 flex gap-6">
-            <button onclick="mudarAba('clientes')" id="btn-clientes" class="py-3 font-medium text-amber-600 border-b-2 border-amber-600 transition-all">Clientes</button>
-            <button onclick="mudarAba('entregadores')" id="btn-entregadores" class="py-3 font-medium text-slate-500 hover:text-amber-600 transition-all">Entregadores</button>
-            <button onclick="mudarAba('veiculos')" id="btn-veiculos" class="py-3 font-medium text-slate-500 hover:text-amber-600 transition-all">Veículos</button>
-            <button onclick="mudarAba('entregas')" id="btn-entregas" class="py-3 font-medium text-slate-500 hover:text-amber-600 transition-all">Lançar Entrega</button>
+            <button onclick="mudarAba('clientes')" id="btn-clientes" class="py-3 font-medium text-amber-600 border-b-2 border-amber-600">Clientes</button>
+            <button onclick="mudarAba('entregadores')" id="btn-entregadores" class="py-3 font-medium text-slate-500">Entregadores</button>
+            <button onclick="mudarAba('veiculos')" id="btn-veiculos" class="py-3 font-medium text-slate-500">Veículos</button>
         </div>
     </nav>
 
-    <!-- Conteúdo Principal -->
     <main class="container mx-auto px-4 py-6 max-w-4xl">
-
-        <!-- ABA: CLIENTES -->
+        <!-- SEÇÃO CLIENTES -->
         <section id="aba-clientes" class="space-y-6">
             <div class="bg-white p-6 rounded-xl shadow-sm border">
-                <h2 class="text-lg font-semibold text-slate-800 mb-4">Cadastrar Novo Cliente</h2>
+                <h2 class="text-lg font-semibold mb-4">Novo Cliente</h2>
                 <form id="form-cliente" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Nome do Cliente</label>
-                        <input type="text" id="cliente-nome" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Telefone / WhatsApp</label>
-                        <input type="text" id="cliente-tel" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none">
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Endereço Completo (Rua, Número, Bairro)</label>
-                        <input type="text" id="cliente-endereco" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none">
-                    </div>
-                    <div class="md:col-span-2 flex justify-end">
-                        <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white font-medium px-5 py-2 rounded-lg transition-all">Salvar Cliente</button>
-                    </div>
+                    <input type="text" id="c-nome" placeholder="Nome" required class="w-full px-3 py-2 border rounded-lg">
+                    <input type="text" id="c-tel" placeholder="Telefone" required class="w-full px-3 py-2 border rounded-lg">
+                    <input type="text" id="c-end" placeholder="Endereço" required class="md:col-span-2 w-full px-3 py-2 border rounded-lg">
+                    <button type="submit" class="bg-amber-600 text-white px-5 py-2 rounded-lg">Salvar Cliente</button>
                 </form>
             </div>
-
-            <!-- Lista de Clientes Cadastrados -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border">
-                <h2 class="text-lg font-semibold text-slate-800 mb-4">Clientes Cadastrados</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="border-b text-sm text-slate-500">
-                                <th class="py-2 px-3">Nome</th>
-                                <th class="py-2 px-3">Telefone</th>
-                                <th class="py-2 px-3">Endereço</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabela-clientes" class="text-sm text-slate-700">
-                            <!-- Os dados entram aqui via JavaScript em tempo real -->
-                             <tr>
-                                <td colspan="3" class="py-4 text-center text-slate-400">Carregando clientes...</td>
-                             </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <table class="w-full bg-white rounded-xl shadow-sm border text-sm text-left">
+                <thead class="border-b text-slate-500"><tr><th class="p-3">Nome</th><th class="p-3">Telefone</th><th class="p-3">Endereço</th></tr></thead>
+                <tbody id="tabela-clientes"></tbody>
+            </table>
         </section>
 
-        <!-- ABA: ENTREGADORES (Inicialmente oculta) -->
+        <!-- SEÇÃO ENTREGADORES -->
         <section id="aba-entregadores" class="space-y-6 hidden">
             <div class="bg-white p-6 rounded-xl shadow-sm border">
-                <h2 class="text-lg font-semibold text-slate-800 mb-4">Cadastrar Entregador</h2>
+                <h2 class="text-lg font-semibold mb-4">Novo Entregador</h2>
                 <form id="form-entregador" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Nome do Entregador</label>
-                        <input type="text" id="entregador-nome" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Telefone</label>
-                        <input type="text" id="entregador-tel" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none">
-                    </div>
-                    <div class="md:col-span-2 flex justify-end">
-                        <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white font-medium px-5 py-2 rounded-lg transition-all">Salvar Entregador</button>
-                    </div>
+                    <input type="text" id="e-nome" placeholder="Nome" required class="w-full px-3 py-2 border rounded-lg">
+                    <input type="text" id="e-tel" placeholder="Telefone" required class="w-full px-3 py-2 border rounded-lg">
+                    <button type="submit" class="bg-amber-600 text-white px-5 py-2 rounded-lg">Salvar Entregador</button>
                 </form>
             </div>
+            <table class="w-full bg-white rounded-xl shadow-sm border text-sm text-left">
+                <thead class="border-b text-slate-500"><tr><th class="p-3">Nome</th><th class="p-3">Telefone</th></tr></thead>
+                <tbody id="tabela-entregadores"></tbody>
+            </table>
         </section>
 
-        <!-- ABA: VEÍCULOS (Inicialmente oculta) -->
+        <!-- SEÇÃO VEÍCULOS -->
         <section id="aba-veiculos" class="space-y-6 hidden">
             <div class="bg-white p-6 rounded-xl shadow-sm border">
-                <h2 class="text-lg font-semibold text-slate-800 mb-4">Cadastrar Veículo</h2>
+                <h2 class="text-lg font-semibold mb-4">Novo Veículo</h2>
                 <form id="form-veiculo" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Modelo (Ex: Moto Honda, Fiorino)</label>
-                        <input type="text" id="veiculo-modelo" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Placa</label>
-                        <input type="text" id="veiculo-placa" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none">
-                    </div>
-                    <div class="md:col-span-2 flex justify-end">
-                        <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white font-medium px-5 py-2 rounded-lg transition-all">Salvar Veículo</button>
-                    </div>
+                    <input type="text" id="v-modelo" placeholder="Modelo" required class="w-full px-3 py-2 border rounded-lg">
+                    <input type="text" id="v-placa" placeholder="Placa" required class="w-full px-3 py-2 border rounded-lg">
+                    <button type="submit" class="bg-amber-600 text-white px-5 py-2 rounded-lg">Salvar Veículo</button>
                 </form>
             </div>
+            <table class="w-full bg-white rounded-xl shadow-sm border text-sm text-left">
+                <thead class="border-b text-slate-500"><tr><th class="p-3">Modelo</th><th class="p-3">Placa</th></tr></thead>
+                <tbody id="tabela-veiculos"></tbody>
+            </table>
         </section>
-
-        <!-- ABA: LANÇAR ENTREGA (Inicialmente oculta) -->
-        <section id="aba-entregas" class="space-y-6 hidden">
-            <div class="bg-white p-6 rounded-xl shadow-sm border">
-                <h2 class="text-lg font-semibold text-slate-800 mb-4">Lançar Nova Entrega / Venda</h2>
-                <p class="text-sm text-slate-500 mb-4">Em breve: seleção de cliente, entregador, quantidade de cartelas e forma de pagamento.</p>
-            </div>
-        </section>
-
     </main>
 
-    <!-- Scripts e Lógica do Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Sua configuração do Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBrwxhCxatKrqyJxzRdhX2t54D7_-xQM18",
             authDomain: "sistema-ovos-distribuicao.firebaseapp.com",
@@ -143,63 +86,37 @@
             appId: "1:243415458017:web:da9429e769a317f92097a0"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const db = getFirestore(initializeApp(firebaseConfig));
 
-        // Função de alternar abas
-        window.mudarAba = function(abaDestino) {
-            ['clientes', 'entregadores', 'veiculos', 'entregas'].forEach(aba => {
-                document.getElementById(`aba-${aba}`).classList.add('hidden');
-                document.getElementById(`btn-${aba}`).className = "py-3 font-medium text-slate-500 hover:text-amber-600 transition-all border-b-2 border-transparent";
+        window.mudarAba = (aba) => {
+            ['clientes', 'entregadores', 'veiculos'].forEach(a => {
+                document.getElementById(`aba-${a}`).classList.toggle('hidden', a !== aba);
+                document.getElementById(`btn-${a}`).className = (a === aba) ? "py-3 font-medium text-amber-600 border-b-2 border-amber-600" : "py-3 font-medium text-slate-500";
             });
-            document.getElementById(`aba-${abaDestino}`).classList.remove('hidden');
-            document.getElementById(`btn-${abaDestino}`).className = "py-3 font-medium text-amber-600 border-b-2 border-amber-600 transition-all";
         };
 
-        // Salvar Cliente no Firestore
-        document.getElementById('form-cliente').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const nome = document.getElementById('cliente-nome').value;
-            const tel = document.getElementById('cliente-tel').value;
-            const end = document.getElementById('cliente-endereco').value;
+        // Função genérica de salvar
+        const salvar = async (colecao, campos, formId) => {
+            await addDoc(collection(db, colecao), { ...campos, criadoEm: new Date() });
+            document.getElementById(formId).reset();
+        };
 
-            try {
-                await addDoc(collection(db, "clientes"), {
-                    nome: nome,
-                    telefone: tel,
-                    endereco: end,
-                    dataCadastro: new Date()
-                });
-                document.getElementById('form-cliente').reset();
-            } catch (e) {
-                alert("Erro ao salvar: " + e.message);
-            }
-        });
+        document.getElementById('form-cliente').onsubmit = (e) => { e.preventDefault(); salvar('clientes', { nome: document.getElementById('c-nome').value, telefone: document.getElementById('c-tel').value, endereco: document.getElementById('c-end').value }, 'form-cliente'); };
+        document.getElementById('form-entregador').onsubmit = (e) => { e.preventDefault(); salvar('entregadores', { nome: document.getElementById('e-nome').value, telefone: document.getElementById('e-tel').value }, 'form-entregador'); };
+        document.getElementById('form-veiculo').onsubmit = (e) => { e.preventDefault(); salvar('veiculos', { modelo: document.getElementById('v-modelo').value, placa: document.getElementById('v-placa').value }, 'form-veiculo'); };
 
-        // Preencher a tabela de clientes em tempo real
-        const q = query(collection(db, "clientes"), orderBy("dataCadastro", "desc"));
-        
-        onSnapshot(q, (snapshot) => {
-            const tabela = document.getElementById('tabela-clientes');
-            tabela.innerHTML = ""; // Limpa a tabela atual
-            
-            if (snapshot.empty) {
-                tabela.innerHTML = `<tr><td colspan="3" class="py-4 text-center text-slate-400">Nenhum cliente cadastrado ainda.</td></tr>`;
-                return;
-            }
-
-            snapshot.forEach((doc) => {
-                const cliente = doc.data();
-                tabela.innerHTML += `
-                    <tr class="border-b hover:bg-amber-50">
-                        <td class="py-3 px-3 font-medium">${cliente.nome}</td>
-                        <td class="py-3 px-3">${cliente.telefone}</td>
-                        <td class="py-3 px-3">${cliente.endereco}</td>
-                    </tr>
-                `;
+        // Escutar tabelas
+        const monitorar = (colecao, tabelaId, render) => {
+            onSnapshot(query(collection(db, colecao), orderBy("criadoEm", "desc")), (snap) => {
+                const tab = document.getElementById(tabelaId);
+                tab.innerHTML = "";
+                snap.forEach(d => tab.innerHTML += render(d.data()));
             });
-        });
+        };
+
+        monitorar('clientes', 'tabela-clientes', (d) => `<tr><td class="p-3">${d.nome}</td><td class="p-3">${d.telefone}</td><td class="p-3">${d.endereco}</td></tr>`);
+        monitorar('entregadores', 'tabela-entregadores', (d) => `<tr><td class="p-3">${d.nome}</td><td class="p-3">${d.telefone}</td></tr>`);
+        monitorar('veiculos', 'tabela-veiculos', (d) => `<tr><td class="p-3">${d.modelo}</td><td class="p-3">${d.placa}</td></tr>`);
     </script>
 </body>
 </html>
