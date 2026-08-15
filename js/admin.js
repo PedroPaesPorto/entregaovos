@@ -481,13 +481,18 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
 
     monitorar('clientes', 'tabela-clientes', (d, id) => {
         const ativo = d.ativo !== false;
+        // Tratamento seguro para evitar quebras por aspas no nome ou endereço
+        const nomeSeguro = (d.nome || '').replace(/'/g, "\\'");
+        const telSeguro = (d.telefone || '').replace(/'/g, "\\'");
+        const endSeguro = (d.endereco || '').replace(/'/g, "\\'");
+
         return `<tr class="border-b hover:bg-slate-50 ${!ativo ? 'opacity-50 bg-slate-50' : ''}">
             <td class="p-2 font-medium">${d.nome}</td>
             <td class="p-2">${d.telefone}</td>
             <td class="p-2">${d.endereco}</td>
             <td class="p-2"><span class="${ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} text-xs px-2 py-0.5 rounded font-semibold">${ativo ? 'Ativo' : 'Inativo'}</span></td>
             <td class="p-2 space-x-1">
-                <button onclick="abrirEdicaoCliente('${id}', '${d.nome}', '${d.telefone}', '${d.endereco}')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded">Editar</button>
+                <button onclick="abrirEdicaoCliente('${id}', '${nomeSeguro}', '${telSeguro}', '${endSeguro}')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded">Editar</button>
                 <button onclick="alternarStatus('clientes', '${id}', ${ativo})" class="${ativo ? 'bg-rose-500 hover:bg-rose-600' : 'bg-emerald-600 hover:bg-emerald-700'} text-white text-xs px-2 py-1 rounded">${ativo ? 'Desativar' : 'Ativar'}</button>
             </td>
         </tr>`;
