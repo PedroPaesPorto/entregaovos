@@ -197,6 +197,34 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
+    const marcadoresEntregadores = {};
+
+    function iniciarMonitoramentoEntregadores() {
+        onSnapshot(collection(db, 'entregadores_posicao'), (snapshot) => {
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const idEntregador = docSnap.id;
+                const latLng = [data.lat, data.lng];
+
+                if (marcadoresEntregadores[idEntregador]) {
+                    marcadoresEntregadores[idEntregador].setLatLng(latLng);
+                    marcadoresEntregadores[idEntregador].getPopup().setContent(`<b>${data.nome}</b>`);
+                } else {
+                    const iconeEntregador = L.divIcon({
+                        className: 'bg-blue-600 rounded-full border-2 border-white flex items-center justify-center',
+                        html: '<span style="font-size:12px">🛵</span>',
+                        iconSize: [30, 30]
+                    });
+                    const marcador = L.marker(latLng, { icon: iconeEntregador }).addTo(map);
+                    marcador.bindPopup(`<b>${data.nome}</b>`);
+                    marcadoresEntregadores[idEntregador] = marcador;
+                }
+            });
+        });
+    }
+
+    iniciarMonitoramentoEntregadores();
+
     let markersLayer = L.layerGroup().addTo(map);
 
     window.mudarAbaAdmin = (aba) => {
