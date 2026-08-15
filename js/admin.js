@@ -125,13 +125,13 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
                 <form id="form-entregador" class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <input type="text" id="e-nome" placeholder="Nome Completo" required class="px-3 py-2 border rounded-lg bg-white">
                     <input type="text" id="e-tel" placeholder="Telefone" required class="px-3 py-2 border rounded-lg bg-white">
-                    <input type="email" id="e-email" placeholder="E-mail correspondente (para vincular usuário)" class="md:col-span-2 px-3 py-2 border rounded-lg bg-white text-sm">
+                    <input type="email" id="e-email" placeholder="E-mail de Acesso" required class="md:col-span-2 px-3 py-2 border rounded-lg bg-white text-sm">
                     <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white font-medium px-4 py-2 rounded-lg transition-all">Salvar Entregador</button>
                 </form>
             </div>
             <div class="overflow-x-auto bg-white p-4 rounded-xl border">
                 <table class="w-full text-sm text-left border-collapse">
-                    <thead><tr class="border-b text-slate-400"><th class="p-2">Nome</th><th class="p-2">Telefone</th><th class="p-2">E-mail Vinculado</th><th class="p-2">Status</th><th class="p-2">Ações</th></tr></thead>
+                    <thead><tr class="border-b text-slate-400"><th class="p-2">Nome</th><th class="p-2">Telefone</th><th class="p-2">E-mail</th><th class="p-2">Status</th><th class="p-2">Ações</th></tr></thead>
                     <tbody id="tabela-entregadores"></tbody>
                 </table>
             </div>
@@ -225,8 +225,6 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
 
     iniciarMonitoramentoEntregadores();
 
-    let markersLayer = L.layerGroup().addTo(map);
-
     window.mudarAbaAdmin = (aba) => {
         ['estoque', 'entregas', 'clientes', 'entregadores', 'veiculos', 'usuarios'].forEach(a => {
             document.getElementById(`secao-${a}`).classList.toggle('hidden', a !== aba);
@@ -259,7 +257,7 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
         const eSnap = await getDocs(collection(db, 'entregadores'));
         eSnap.forEach(docSnap => {
             const data = docSnap.data();
-            if (data.ativo !== false) {
+            if (data.ativo !== false && data.nome) {
                 eSelect.innerHTML += `<option value="${data.nome}">${data.nome}</option>`;
             }
         });
@@ -320,19 +318,43 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
         alert("Cliente cadastrado!");
     };
 
-    // Cadastro de Entregadores
+    // Cadastro de Entregadores (Gera Entregador + Usuário com o mesmo ID)
     document.getElementById('form-entregador').onsubmit = async (e) => { 
         e.preventDefault(); 
-        await addDoc(collection(db, 'entregadores'), { 
-            nome: document.getElementById('e-nome').value, 
-            telefone: document.getElementById('e-tel').value, 
-            emailVinculado: document.getElementById('e-email').value || '',
-            ativo: true, 
-            criadoEm: new Date() 
-        });
-        document.getElementById('form-entregador').reset();
-        carregarOpcoesSelects();
-        alert("Entregador cadastrado!");
+        const nome = document.getElementById('e-nome').value;
+        const telefone = document.getElementById('e-tel').value;
+        const email = document.getElementById('e-email').value;
+
+        try {
+            const novoId = doc(collection(db, 'entregadores')).id;
+
+            const dadosEntregador = {
+                nome: nome,
+                telefone: telefone,
+                email: email,
+                ativo: true,
+                criadoEm: new Date()
+            };
+
+            const dadosUsuario = {
+                email: email,
+                senha: "102030",
+                perfil: "entregador",
+                ativo: true,
+                criadoEm: new Date()
+            };
+
+            await Promise.all([
+                setDoc(doc(db, 'entregadores', novoId), dadosEntregador),
+                setDoc(doc(db, 'usuarios', novoId), dadosUsuario)
+            ]);
+
+            document.getElementById('form-entregador').reset();
+            carregarOpcoesSelects();
+            alert("Entregador e usuário criados com sucesso!");
+        } catch (err) {
+            alert("Erro ao cadastrar: " + err.message);
+        }
     };
     
     // Cadastro de Veículos
@@ -349,24 +371,44 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
         alert("Veículo cadastrado!");
     };
 
-    // Cadastro de Usuários
+    // Cadastro de Usuários (Gera Usuário + Entregador com nome em branco se perfil for entregador)
     document.getElementById('form-usuario').onsubmit = async (e) => {
         e.preventDefault();
         const email = document.getElementById('u-email').value;
-        const senha = document.getElementById('u-senha').value;
         const perfil = document.getElementById('u-perfil').value;
 
         try {
-            const appTemp = initializeApp(auth.app.options, "tempApp" + Date.now());
-            const { getAuth: getAuthTemp, createUserWithEmailAndPassword: createUserTemp, signOut: signOutTemp } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js");
-            const authTemp = getAuthTemp(appTemp);
+            const novoId = doc(collection(db, 'usuarios')).id;
 
-            const cred = await createUserTemp(authTemp, email, senha);
-            await setDoc(doc(db, "usuarios", cred.user.uid), { email, perfil, ativo: true, criadoEm: new Date() });
-            await signOutTemp(authTemp);
+            const dadosUsuario = {
+                email: email,
+                senha: "102030",
+                perfil: perfil,
+                ativo: true,
+                criadoEm: new Date()
+            };
+
+            const operacoes = [
+                setDoc(doc(db, 'usuarios', novoId), dadosUsuario)
+            ];
+
+            // Se o perfil for entregador, cria também na tabela entregador com nome em branco
+            if (perfil === 'entregador') {
+                const dadosEntregador = {
+                    nome: "",
+                    telefone: "",
+                    email: email,
+                    ativo: true,
+                    criadoEm: new Date()
+                };
+                operacoes.push(setDoc(doc(db, 'entregadores', novoId), dadosEntregador));
+            }
+
+            await Promise.all(operacoes);
 
             alert("Usuário criado com sucesso!");
             document.getElementById('form-usuario').reset();
+            carregarOpcoesSelects();
         } catch (error) {
             alert("Erro: " + error.message);
         }
@@ -388,20 +430,17 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
         alert("Entrega lançada!");
     };
 
-    // Funções de Alternar Status (Ativar / Desativar em Cascata para Entregadores)
-    window.alternarStatus = async (colecao, id, estadoAtual, emailVinculado = null) => {
+    // Funções de Alternar Status (Ativar / Desativar em Cascata)
+    window.alternarStatus = async (colecao, id, estadoAtual) => {
         const novoStatus = !estadoAtual;
         try {
             await updateDoc(doc(db, colecao, id), { ativo: novoStatus });
 
-            // Se for entregador e foi desativado, desativa o usuário correspondente no Firestore se houver e-mail vinculado
-            if (colecao === 'entregadores' && !novoStatus && emailVinculado) {
-                const uSnap = await getDocs(collection(db, 'usuarios'));
-                uSnap.forEach(async (uDoc) => {
-                    if (uDoc.data().email === emailVinculado) {
-                        await updateDoc(doc(db, 'usuarios', uDoc.id), { ativo: false });
-                    }
-                });
+            // Se desativou em uma ponta, desativa na outra utilizando o mesmo ID correspondente
+            if (colecao === 'entregadores') {
+                await updateDoc(doc(db, 'usuarios', id), { ativo: novoStatus }).catch(() => {});
+            } else if (colecao === 'usuarios') {
+                await updateDoc(doc(db, 'entregadores', id), { ativo: novoStatus }).catch(() => {});
             }
 
             carregarOpcoesSelects();
@@ -440,19 +479,26 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
         modalEdicao.classList.remove('hidden');
     };
 
-    window.abrirEdicaoEntregador = (id, nome, telefone, emailVinculado) => {
+    window.abrirEdicaoEntregador = (id, nome, telefone, email) => {
         document.getElementById('modal-edicao-titulo').textContent = "Editar Entregador";
         document.getElementById('modal-edicao-conteudo').innerHTML = `
             <input type="text" id="edit-e-nome" value="${nome}" class="w-full px-3 py-2 border rounded-lg text-sm">
             <input type="text" id="edit-e-tel" value="${telefone}" class="w-full px-3 py-2 border rounded-lg text-sm">
-            <input type="email" id="edit-e-email" value="${emailVinculado || ''}" placeholder="E-mail vinculado" class="w-full px-3 py-2 border rounded-lg text-sm">
+            <input type="email" id="edit-e-email" value="${email || ''}" class="w-full px-3 py-2 border rounded-lg text-sm">
         `;
         document.getElementById('btn-salvar-edicao').onclick = async () => {
+            const novoNome = document.getElementById('edit-e-nome').value;
+            const novoTel = document.getElementById('edit-e-tel').value;
+            const novoEmail = document.getElementById('edit-e-email').value;
+
             await updateDoc(doc(db, 'entregadores', id), {
-                nome: document.getElementById('edit-e-nome').value,
-                telefone: document.getElementById('edit-e-tel').value,
-                emailVinculado: document.getElementById('edit-e-email').value
+                nome: novoNome,
+                telefone: novoTel,
+                email: novoEmail
             });
+            // Atualiza também na tabela de usuários se existir
+            await updateDoc(doc(db, 'usuarios', id), { email: novoEmail }).catch(() => {});
+
             modalEdicao.classList.add('hidden');
             carregarOpcoesSelects();
             alert("Entregador atualizado!");
@@ -488,9 +534,16 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
             </select>
         `;
         document.getElementById('btn-salvar-edicao').onclick = async () => {
-            await updateDoc(doc(db, 'usuarios', id), {
-                perfil: document.getElementById('edit-u-perfil').value
-            });
+            const novoPerfil = document.getElementById('edit-u-perfil').value;
+            await updateDoc(doc(db, 'usuarios', id), { perfil: novoPerfil });
+            
+            // Se mudou para entregador e não estava na tabela de entregadores, cria com nome em branco
+            if (novoPerfil === 'entregador') {
+                const uDoc = await getDocs(collection(db, 'usuarios')); // apenas para garantir verificação
+                // Opcional: cria o registro em entregadores se não existir com esse ID
+                setDoc(doc(db, 'entregadores', id), { nome: "", telefone: "", email: "", ativo: true, criadoEm: new Date() }, { merge: true });
+            }
+
             modalEdicao.classList.add('hidden');
             alert("Usuário atualizado!");
         };
@@ -509,7 +562,6 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
 
     monitorar('clientes', 'tabela-clientes', (d, id) => {
         const ativo = d.ativo !== false;
-        // Tratamento seguro para evitar quebras por aspas no nome ou endereço
         const nomeSeguro = (d.nome || '').replace(/'/g, "\\'");
         const telSeguro = (d.telefone || '').replace(/'/g, "\\'");
         const endSeguro = (d.endereco || '').replace(/'/g, "\\'");
@@ -528,14 +580,15 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
 
     monitorar('entregadores', 'tabela-entregadores', (d, id) => {
         const ativo = d.ativo !== false;
+        const nomeExibicao = d.nome ? d.nome : '<span class="text-slate-400 italic">Nome em branco</span>';
         return `<tr class="border-b hover:bg-slate-50 ${!ativo ? 'opacity-50 bg-slate-50' : ''}">
-            <td class="p-2 font-medium">${d.nome}</td>
-            <td class="p-2">${d.telefone}</td>
-            <td class="p-2 text-slate-500 text-xs">${d.emailVinculado || 'Não vinculado'}</td>
+            <td class="p-2 font-medium">${nomeExibicao}</td>
+            <td class="p-2">${d.telefone || '-'}</td>
+            <td class="p-2 text-slate-500 text-xs">${d.email || 'Não informado'}</td>
             <td class="p-2"><span class="${ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} text-xs px-2 py-0.5 rounded font-semibold">${ativo ? 'Ativo' : 'Inativo'}</span></td>
             <td class="p-2 space-x-1">
-                <button onclick="abrirEdicaoEntregador('${id}', '${d.nome}', '${d.telefone}', '${d.emailVinculado || ''}')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded">Editar</button>
-                <button onclick="alternarStatus('entregadores', '${id}', ${ativo}, '${d.emailVinculado || ''}')" class="${ativo ? 'bg-rose-500 hover:bg-rose-600' : 'bg-emerald-600 hover:bg-emerald-700'} text-white text-xs px-2 py-1 rounded">${ativo ? 'Desativar' : 'Ativar'}</button>
+                <button onclick="abrirEdicaoEntregador('${id}', '${d.nome || ''}', '${d.telefone || ''}', '${d.email || ''}')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded">Editar</button>
+                <button onclick="alternarStatus('entregadores', '${id}', ${ativo})" class="${ativo ? 'bg-rose-500 hover:bg-rose-600' : 'bg-emerald-600 hover:bg-emerald-700'} text-white text-xs px-2 py-1 rounded">${ativo ? 'Desativar' : 'Ativar'}</button>
             </td>
         </tr>`;
     });
@@ -557,50 +610,12 @@ export function renderizarPainelAdmin(conteudoDiv, emailUsuario) {
         const ativo = d.ativo !== false;
         return `<tr class="border-b hover:bg-slate-50 ${!ativo ? 'opacity-50 bg-slate-50' : ''}">
             <td class="p-2 font-medium">${d.email}</td>
-            <td class="p-2 uppercase text-xs font-bold text-amber-600">${d.perfil}</td>
+            <td class="p-2 uppercase text-xs font-semibold text-amber-700">${d.perfil}</td>
             <td class="p-2"><span class="${ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} text-xs px-2 py-0.5 rounded font-semibold">${ativo ? 'Ativo' : 'Inativo'}</span></td>
             <td class="p-2 space-x-1">
                 <button onclick="abrirEdicaoUsuario('${id}', '${d.perfil}')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded">Editar</button>
                 <button onclick="alternarStatus('usuarios', '${id}', ${ativo})" class="${ativo ? 'bg-rose-500 hover:bg-rose-600' : 'bg-emerald-600 hover:bg-emerald-700'} text-white text-xs px-2 py-1 rounded">${ativo ? 'Desativar' : 'Ativar'}</button>
             </td>
         </tr>`;
-    });
-
-    // Monitorar Entregas
-    onSnapshot(query(collection(db, 'entregas'), orderBy("criadoEm", "desc")), async (snap) => {
-        const tab = document.getElementById('tabela-entregas');
-        if (!tab) return;
-        tab.innerHTML = "";
-        
-        snap.forEach(d => {
-            const data = d.data();
-            const id = d.id;
-            let badgeColor = 'bg-yellow-100 text-yellow-800';
-            if (data.status === 'Concluída') badgeColor = 'bg-green-100 text-green-800';
-            if (data.status === 'Cancelada') badgeColor = 'bg-red-100 text-red-800';
-
-            let acoes = data.status === 'Pendente' ? `
-                <button onclick="concluirEntrega('${id}', ${data.branco}, ${data.vermelho})" class="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1 rounded mr-1">Concluir</button>
-                <button onclick="cancelarEntrega('${id}')" class="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded">Cancelar</button>
-            ` : `<span class="text-xs text-slate-400">Finalizada</span>`;
-
-            tab.innerHTML += `
-                <tr class="border-b hover:bg-slate-50">
-                    <td class="p-2 font-medium">${data.cliente}</td>
-                    <td class="p-2">${data.entregador}</td>
-                    <td class="p-2">${data.branco} Brancos / ${data.vermelho} Vermelhos</td>
-                    <td class="p-2"><span class="${badgeColor} text-xs px-2 py-0.5 rounded font-semibold">${data.status}</span></td>
-                    <td class="p-2">${acoes}</td>
-                </tr>`;
-        });
-
-        markersLayer.clearLayers();
-        const clientesSnap = await getDocs(collection(db, 'clientes'));
-        clientesSnap.forEach(cliDoc => {
-            const c = cliDoc.data();
-            if (c.ativo !== false && c.lat && c.lng) {
-                L.marker([c.lat, c.lng]).addTo(markersLayer).bindPopup(`<b>${c.nome}</b><br>${c.endereco}`);
-            }
-        });
     });
 }
